@@ -1,9 +1,12 @@
 package org.dava.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.*;
 import org.dava.enumeration.GameStatus;
 import org.hibernate.annotations.CreationTimestamp;
@@ -33,6 +36,7 @@ public class Game {
   @Length(max = 500)
   private String description;
 
+  @Builder.Default
   @Enumerated(EnumType.STRING)
   private GameStatus status = GameStatus.DRAFT;
 
@@ -47,4 +51,20 @@ public class Game {
   @Column(name = "updated_at")
   @UpdateTimestamp(source = SourceType.DB)
   private LocalDateTime updatedAt;
+
+  @Transient private Integer questionCount;
+
+  @JsonProperty("questionCount")
+  public Integer getQuestionCount() {
+    return questions != null ? questions.size() : 0;
+  }
+
+  @Builder.Default
+  @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Question> questions = new ArrayList<>();
+
+  public void addQuestion(Question q) {
+    questions.add(q);
+    q.setGame(this);
+  }
 }

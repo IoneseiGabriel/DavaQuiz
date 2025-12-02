@@ -4,12 +4,15 @@ import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import org.dava.domain.Game;
+import org.dava.dto.GameRequest;
 import org.dava.dto.GameUpdateRequest;
 import org.dava.response.GameResponse;
 import org.dava.response.PageResponse;
 import org.dava.security.JwtTokenProvider;
 import org.dava.service.AuthService;
 import org.dava.service.GameService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/games")
 @AllArgsConstructor
 public class GameController {
+
   private final GameService gameService;
   private final AuthService authService;
   private final JwtTokenProvider jwtTokenProvider;
@@ -58,6 +62,25 @@ public class GameController {
   }
 
   /**
+   * Creates a new {@link Game} based on the provided request payload.
+   *
+   * <p>This endpoint accepts a {@link GameRequest} object, delegates game creation to the {@code
+   * gameCreationService}, and returns the created {@link Game} with an HTTP 201 (Created) status.
+   *
+   * @param request the payload containing the details required to create a new game
+   * @return a {@link ResponseEntity} containing the created {@link Game} and an HTTP 201 status
+   */
+  @PostMapping
+  public ResponseEntity<@NonNull GameResponse> createGame(@RequestBody GameRequest request) {
+
+    Long userId = 200L;
+
+    GameResponse resp = gameService.createGame(request, userId);
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+  }
+
+  /**
    * Partially updates a game's metadata (title, description, status).
    *
    * <p>This endpoint supports PATCH semantics, meaning only the fields provided in the request body
@@ -81,7 +104,7 @@ public class GameController {
    * @return the updated game resource as HTTP 200
    */
   @PatchMapping("/{id}")
-  public ResponseEntity<GameResponse> updateGameMetadata(
+  public ResponseEntity<@NonNull GameResponse> updateGameMetadata(
       @PathVariable Long id,
       @Valid @RequestBody GameUpdateRequest request,
       @RequestHeader("Authorization") String authHeader) {
