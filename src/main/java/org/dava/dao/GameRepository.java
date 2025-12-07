@@ -10,6 +10,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GameRepository extends JpaRepository<Game, Long> {
 
-//    @Query(value="SELECT * FROM game WHERE id = :gameID", nativeQuery = true)
-//    List<Game> findGamesByGameId(Long gameId);
+
 }

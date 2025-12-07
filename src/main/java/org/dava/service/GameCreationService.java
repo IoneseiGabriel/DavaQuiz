@@ -1,6 +1,5 @@
 package org.dava.service;
 
-import org.dava.controller.GameCreationController;
 import org.dava.dao.GameRepository;
 import org.dava.domain.*;
 import org.dava.exception.InvalidGameException;

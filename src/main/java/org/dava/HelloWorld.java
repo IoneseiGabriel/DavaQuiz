@@ -1,4 +1,4 @@
-package org.dava.controller;
+package org.dava;
 
 import lombok.AllArgsConstructor;
 import org.dava.dao.HelloRepository;

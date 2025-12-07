@@ -1,4 +1,4 @@
-package org.dava.controller;
+package org.dava;
 
 import org.dava.domain.GameCreationRequest;
 import org.dava.domain.Game;

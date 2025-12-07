@@ -30,7 +30,14 @@ CREATE TABLE question (
                               )
 );
 
-ALTER TABLE question ALTER COLUMN id RESTART WITH 6;
+CREATE TABLE IF NOT EXISTS question_options (
+                                                id BIGINT NOT NULL,
+                                                options VARCHAR(255)
+
+    );
+
+
+ALTER TABLE question ALTER COLUMN id RESTART WITH 2;
 
 -- Index on game_id
 CREATE INDEX idx_question_game_id ON question (game_id);
