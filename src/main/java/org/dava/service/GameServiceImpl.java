@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.dava.dao.GameRepository;
 import org.dava.dao.GameSpecification;
 import org.dava.domain.Game;
+import org.dava.dto.GameUpdateRequest;
+import org.dava.enumeration.GameStatus;
+import org.dava.exception.InvalidGameException;
 import org.dava.mapper.GameMapper;
 import org.dava.response.GameResponse;
 import org.dava.response.PageResponse;
@@ -16,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -70,5 +74,68 @@ public class GameServiceImpl implements GameService {
 
     private static Set<String> getFilterFields() {
         return Set.of("status", "createdAt", "updatedAt", "createdBy", "title");
+    }
+
+    /**
+     * Updates a game's metadata (title, description, status) for the given game ID and host.
+     * <p>
+     * Business rules:
+     * <ul>
+     *     <li>Only the host who created the game may update it.</li>
+     *     <li>Title must be at least 3 characters if present.</li>
+     *     <li>Status transitions allowed: DRAFT → PUBLISHED.</li>
+     *     <li>Status transitions forbidden: PUBLISHED → DRAFT.</li>
+     * </ul>
+     *
+     * @param gameId  ID of the game to update
+     * @param userId  ID of the user performing the update (must match createdBy)
+     * @param request Partial update request containing metadata fields
+     * @return the updated {@link Game} instance
+     *
+     * @throws InvalidGameException   if the game does not exist or does not belong to the host
+     * @throws InvalidGameException    if validation rules are violated (title invalid or illegal status transition)
+     */
+
+    @Override
+    public GameResponse updateGameMetadata(Long gameId, Long userId, GameUpdateRequest request) {
+        Game game = gameRepository.findByIdAndCreatedBy(gameId, userId)
+                .orElseThrow(() -> new InvalidGameException("Game not found"));
+
+        if(request.getTitle() != null){
+            String title = request.getTitle();
+            if(title.length()<3){
+                throw new InvalidGameException("Title must be at least 3 characters long");
+            }
+            game.setTitle(title);
+        }
+
+        if(request.getDescription() != null){
+            game.setDescription(request.getDescription());
+        }
+
+        if(request.getStatus() != null){
+            handleStatusTransition(game, request.getStatus());
+        }
+
+        game.setUpdatedAt(LocalDateTime.now());
+
+        Game saved = gameRepository.save(game);
+        return gameMapper.toGameResponse(saved);
+
+    }
+
+    private void handleStatusTransition(Game game, GameStatus requestedStatus){
+        GameStatus currentStatus = game.getStatus();
+
+        if(currentStatus == requestedStatus){
+            return;
+        }
+
+        if (currentStatus == GameStatus.DRAFT && requestedStatus == GameStatus.PUBLISHED){
+            game.setStatus(GameStatus.PUBLISHED);
+            return;
+        }
+
+        throw new InvalidGameException("Invalid status transition from "+ currentStatus + " to "+ requestedStatus);
     }
 }

@@ -2,14 +2,17 @@ package org.dava.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import org.dava.domain.Game;
+import org.dava.dto.GameUpdateRequest;
 import org.dava.response.GameResponse;
 import org.dava.response.PageResponse;
+import org.dava.security.JwtTokenProvider;
+import org.dava.service.AuthService;
+import org.dava.service.AuthServiceImpl;
 import org.dava.service.GameService;
+import org.dava.service.GameServiceImpl;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -21,6 +24,8 @@ import java.util.Map;
 @AllArgsConstructor
 public class GameController {
     private final GameService gameService;
+    private final AuthService authService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * Retrieves a paginated list of games, optionally filtered by the provided query parameters.
@@ -53,4 +58,45 @@ public class GameController {
 
         return ResponseEntity.ok(gameService.getAll(page, size, filters));
     }
+
+
+    /**
+     * Partially updates a game's metadata (title, description, status).
+     *
+     * <p>This endpoint supports PATCH semantics, meaning only the fields provided
+     * in the request body will be updated. Ownership validation is applied, allowing
+     * only the host who created the game to modify it.</p>
+     *
+     * <p><strong>Behavior:</strong></p>
+     * <ul>
+     *   <li>Returns <code>200 OK</code> with the updated game on success</li>
+     *   <li>Returns <code>400 Bad Request</code> for invalid updates
+     *       (e.g. title too short, invalid status transition)</li>
+     *   <li>Returns <code>401 Unauthorized</code> if authentication is missing</li>
+     *   <li>Returns <code>404 Not Found</code> if the game does not exist
+     *       or does not belong to the authenticated host</li>
+     * </ul>
+     *
+     * @param id the ID of the game to update
+     * @param request the metadata fields to update
+     * @param authHeader auth bearer token
+     * @return the updated game resource as HTTP 200
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<GameResponse> updateGameMetadata(
+            @PathVariable Long id,
+            @RequestBody GameUpdateRequest request,
+            @RequestHeader("Authorization") String authHeader
+    ){
+
+        String token = authHeader.startsWith("Bearer ") ? authHeader.substring("Bearer ".length()) : null;
+
+        Long userId = jwtTokenProvider.validateAndGetUserId(token);
+
+        GameResponse updatedGame = gameService.updateGameMetadata(id, userId, request);
+
+        return ResponseEntity.ok(updatedGame);
+
+    }
+
 }

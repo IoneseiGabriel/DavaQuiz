@@ -3,6 +3,9 @@ package org.dava.service;
 import lombok.NonNull;
 import org.dava.dao.GameRepository;
 import org.dava.domain.Game;
+import org.dava.dto.GameUpdateRequest;
+import org.dava.enumeration.GameStatus;
+import org.dava.exception.InvalidGameException;
 import org.dava.mapper.GameMapper;
 import org.dava.mock.GameMockData;
 import org.dava.mock.PageMockData;
@@ -51,12 +54,19 @@ class GameServiceTest {
 
     private List<GameResponse> gameResponseList;
 
+    private GameUpdateRequest updateRequest;
+
     @BeforeEach
     void setUp() {
         pageable = PageRequest.of(pageNumber, pageSize);
         filters = Map.of("title", "Speed", "status", "DRAFT");
         gameList = GameMockData.getValidGameList();
         gameResponseList = GameMockData.getValidGameList().stream().map(GameMockData::getGameResponse).toList();
+
+        updateRequest = new GameUpdateRequest();
+        updateRequest.setTitle("Updated Math Quiz");
+        updateRequest.setDescription("Updated description math game");
+        updateRequest.setStatus(GameStatus.PUBLISHED);
     }
 
     @Test
@@ -117,5 +127,155 @@ class GameServiceTest {
         PageResponse<GameResponse> result = gameService.getAll(0, pageSize, filters);
 
         Assertions.assertEquals(expectedResponse, result, "The result must be a PageResponse containing an empty list");
+    }
+
+    @Test
+    void updateGameMetadata_withValidTitleAndDescription_updatesFields() {
+        Long gameId = 1L;
+        Long hostId = 200L;
+
+        Game existingGame = new Game();
+        existingGame.setId(gameId);
+        existingGame.setCreatedBy(hostId);
+        existingGame.setTitle("Old title");
+        existingGame.setDescription("Old description");
+        existingGame.setStatus(GameStatus.DRAFT);
+
+        when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
+                .thenReturn(Optional.of(existingGame));
+        when(gameRepository.save(any(Game.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        GameResponse mappedResponse = new GameResponse();
+        mappedResponse.setId(gameId);
+        mappedResponse.setTitle(updateRequest.getTitle());
+        mappedResponse.setDescription(updateRequest.getDescription());
+        mappedResponse.setStatus(GameStatus.PUBLISHED);
+
+        when(gameMapper.toGameResponse(any(Game.class))).thenReturn(mappedResponse);
+
+        GameResponse result = gameService.updateGameMetadata(gameId, hostId, updateRequest);
+
+        assertEquals("Updated Math Quiz", result.getTitle());
+        assertEquals("Updated description math game", result.getDescription());
+        assertEquals(GameStatus.PUBLISHED, result.getStatus());
+    }
+
+    @Test
+    void updateGameMetadata_allowsDraftToPublishedTransition() {
+        Long gameId = 1L;
+        Long hostId = 200L;
+
+        Game game = new Game();
+        game.setId(gameId);
+        game.setCreatedBy(hostId);
+        game.setStatus(GameStatus.DRAFT);
+
+        GameUpdateRequest request = new GameUpdateRequest();
+        request.setStatus(GameStatus.PUBLISHED);
+
+        when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
+                .thenReturn(Optional.of(game));
+        when(gameRepository.save(any(Game.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        GameResponse response = new GameResponse();
+        response.setId(gameId);
+        response.setStatus(GameStatus.PUBLISHED);
+
+        when(gameMapper.toGameResponse(any(Game.class))).thenReturn(response);
+
+        GameResponse result = gameService.updateGameMetadata(gameId, hostId, request);
+
+        assertEquals(GameStatus.PUBLISHED, result.getStatus());
+    }
+
+    @Test
+    void updateGameMetadata_throwsInvalidGameException_whenPublishedToDraft() {
+        Long gameId = 1L;
+        Long hostId = 200L;
+
+        Game game = new Game();
+        game.setId(gameId);
+        game.setCreatedBy(hostId);
+        game.setStatus(GameStatus.PUBLISHED);
+
+        GameUpdateRequest request = new GameUpdateRequest();
+        request.setStatus(GameStatus.DRAFT);
+
+        when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
+                .thenReturn(Optional.of(game));
+
+        assertThrows(InvalidGameException.class,
+                () -> gameService.updateGameMetadata(gameId, hostId, request));
+    }
+
+    @Test
+    void updateGameMetadata_throwsGameNotFoundException_whenGameDoesNotExist() {
+        Long gameId = 999L;
+        Long hostId = 200L;
+
+        GameUpdateRequest request = new GameUpdateRequest();
+        request.setTitle("Anything");
+
+        when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
+                .thenReturn(Optional.empty());
+
+        assertThrows(InvalidGameException.class,
+                () -> gameService.updateGameMetadata(gameId, hostId, request));
+    }
+
+    @Test
+    void updateGameMetadata_throwsInvalidGameException_whenTitleTooShort() {
+        Long gameId = 1L;
+        Long hostId = 200L;
+
+        Game game = new Game();
+        game.setId(gameId);
+        game.setCreatedBy(hostId);
+        game.setStatus(GameStatus.DRAFT);
+
+        GameUpdateRequest request = new GameUpdateRequest();
+        request.setTitle("ab"); // < 3
+
+        when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
+                .thenReturn(Optional.of(game));
+
+        assertThrows(InvalidGameException.class,
+                () -> gameService.updateGameMetadata(gameId, hostId, request));
+    }
+
+    @Test
+    void updateGameMetadata_withEmptyRequest_doesNotChangeAnything() {
+        Long gameId = 1L;
+        Long hostId = 200L;
+
+        Game game = new Game();
+        game.setId(gameId);
+        game.setCreatedBy(hostId);
+        game.setTitle("Original title");
+        game.setDescription("Original desc");
+        game.setStatus(GameStatus.DRAFT);
+
+        GameUpdateRequest request = new GameUpdateRequest();
+
+        when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
+                .thenReturn(Optional.of(game));
+        when(gameRepository.save(any(Game.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        GameResponse response = new GameResponse();
+        response.setId(gameId);
+        response.setTitle("Original title");
+        response.setDescription("Original desc");
+        response.setStatus(GameStatus.DRAFT);
+
+        when(gameMapper.toGameResponse(any(Game.class))).thenReturn(response);
+
+        GameResponse result = gameService.updateGameMetadata(gameId, hostId, request);
+
+        assertEquals("Original title", result.getTitle());
+        assertEquals("Original desc", result.getDescription());
+        assertEquals(GameStatus.DRAFT, result.getStatus());
     }
 }
