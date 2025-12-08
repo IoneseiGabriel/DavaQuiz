@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class ExceptionMessage {
-    private Object message;
+  private Object message;
 }

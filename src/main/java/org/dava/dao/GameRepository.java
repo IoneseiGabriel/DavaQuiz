@@ -8,5 +8,5 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface GameRepository extends JpaRepository<@NonNull Game, @NonNull Long> {
-    Page<@NonNull Game> findAll(Specification<@NonNull Game> gameSpec, Pageable pageable);
+  Page<@NonNull Game> findAll(Specification<@NonNull Game> gameSpec, Pageable pageable);
 }

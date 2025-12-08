@@ -5,5 +5,5 @@ import org.dava.dto.LoginResponseDto;
 
 public interface AuthService {
 
-    LoginResponseDto login(LoginRequestDto request, String clientIp);
+  LoginResponseDto login(LoginRequestDto request, String clientIp);
 }
