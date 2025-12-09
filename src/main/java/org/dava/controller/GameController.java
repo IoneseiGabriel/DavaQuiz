@@ -1,5 +1,6 @@
 package org.dava.controller;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import org.dava.domain.Game;
@@ -12,6 +13,10 @@ import org.dava.service.AuthServiceImpl;
 import org.dava.service.GameService;
 import org.dava.service.GameServiceImpl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -85,7 +90,7 @@ public class GameController {
     @PatchMapping("/{id}")
     public ResponseEntity<GameResponse> updateGameMetadata(
             @PathVariable Long id,
-            @RequestBody GameUpdateRequest request,
+            @Valid @RequestBody GameUpdateRequest request,
             @RequestHeader("Authorization") String authHeader
     ){
 

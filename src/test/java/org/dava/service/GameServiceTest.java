@@ -11,6 +11,7 @@ import org.dava.mock.GameMockData;
 import org.dava.mock.PageMockData;
 import org.dava.response.GameResponse;
 import org.dava.response.PageResponse;
+import org.dava.util.GameValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ class GameServiceTest {
 
     @Mock
     private GameMapper gameMapper;
+
+    @Mock
+    private GameValidator gameValidator;
 
     @InjectMocks
     private GameServiceImpl gameService;
@@ -206,6 +210,10 @@ class GameServiceTest {
         when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
                 .thenReturn(Optional.of(game));
 
+        doThrow(new InvalidGameException("Invalid status transition"))
+                .when(gameValidator)
+                .handleStatusTransition(game, GameStatus.DRAFT);
+
         assertThrows(InvalidGameException.class,
                 () -> gameService.updateGameMetadata(gameId, hostId, request));
     }
@@ -241,8 +249,7 @@ class GameServiceTest {
         when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
                 .thenReturn(Optional.of(game));
 
-        assertThrows(InvalidGameException.class,
-                () -> gameService.updateGameMetadata(gameId, hostId, request));
+        assertDoesNotThrow(() -> gameService.updateGameMetadata(gameId, hostId, request));
     }
 
     @Test

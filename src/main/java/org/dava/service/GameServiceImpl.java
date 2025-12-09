@@ -12,7 +12,9 @@ import org.dava.mapper.GameMapper;
 import org.dava.response.GameResponse;
 import org.dava.response.PageResponse;
 import org.dava.util.FilteringHelper;
+import org.dava.util.GameValidator;
 import org.dava.util.ValidationUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +37,8 @@ public class GameServiceImpl implements GameService {
     private final GameRepository gameRepository;
 
     private final GameMapper gameMapper;
+
+    private final GameValidator gameValidator;
 
     /**
      * Retrieves a paginated list of games, optionally filtered by several fields.
@@ -82,7 +86,6 @@ public class GameServiceImpl implements GameService {
      * Business rules:
      * <ul>
      *     <li>Only the host who created the game may update it.</li>
-     *     <li>Title must be at least 3 characters if present.</li>
      *     <li>Status transitions allowed: DRAFT → PUBLISHED.</li>
      *     <li>Status transitions forbidden: PUBLISHED → DRAFT.</li>
      * </ul>
@@ -92,8 +95,7 @@ public class GameServiceImpl implements GameService {
      * @param request Partial update request containing metadata fields
      * @return the updated {@link Game} instance
      *
-     * @throws InvalidGameException   if the game does not exist or does not belong to the host
-     * @throws InvalidGameException    if validation rules are violated (title invalid or illegal status transition)
+     * @throws InvalidGameException   if the game does not exist
      */
 
     @Override
@@ -101,20 +103,13 @@ public class GameServiceImpl implements GameService {
         Game game = gameRepository.findByIdAndCreatedBy(gameId, userId)
                 .orElseThrow(() -> new InvalidGameException("Game not found"));
 
-        if(request.getTitle() != null){
-            String title = request.getTitle();
-            if(title.length()<3){
-                throw new InvalidGameException("Title must be at least 3 characters long");
-            }
-            game.setTitle(title);
-        }
-
         if(request.getDescription() != null){
             game.setDescription(request.getDescription());
         }
 
         if(request.getStatus() != null){
-            handleStatusTransition(game, request.getStatus());
+            gameValidator.handleStatusTransition(game, request.getStatus());
+            game.setStatus(request.getStatus());
         }
 
         game.setUpdatedAt(LocalDateTime.now());
@@ -124,18 +119,4 @@ public class GameServiceImpl implements GameService {
 
     }
 
-    private void handleStatusTransition(Game game, GameStatus requestedStatus){
-        GameStatus currentStatus = game.getStatus();
-
-        if(currentStatus == requestedStatus){
-            return;
-        }
-
-        if (currentStatus == GameStatus.DRAFT && requestedStatus == GameStatus.PUBLISHED){
-            game.setStatus(GameStatus.PUBLISHED);
-            return;
-        }
-
-        throw new InvalidGameException("Invalid status transition from "+ currentStatus + " to "+ requestedStatus);
-    }
 }
