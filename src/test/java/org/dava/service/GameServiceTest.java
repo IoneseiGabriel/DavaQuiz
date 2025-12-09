@@ -138,15 +138,10 @@ class GameServiceTest {
         Long gameId = 1L;
         Long hostId = 200L;
 
-        Game existingGame = new Game();
-        existingGame.setId(gameId);
-        existingGame.setCreatedBy(hostId);
-        existingGame.setTitle("Old title");
-        existingGame.setDescription("Old description");
-        existingGame.setStatus(GameStatus.DRAFT);
+        Game game = GameMockData.createGame(gameId, hostId, "Original Math title", "Original Math desc", GameStatus.DRAFT);
 
         when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
-                .thenReturn(Optional.of(existingGame));
+                .thenReturn(Optional.of(game));
         when(gameRepository.save(any(Game.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -170,10 +165,7 @@ class GameServiceTest {
         Long gameId = 1L;
         Long hostId = 200L;
 
-        Game game = new Game();
-        game.setId(gameId);
-        game.setCreatedBy(hostId);
-        game.setStatus(GameStatus.DRAFT);
+        Game game = GameMockData.createGame(gameId, hostId, "Original title", "Original desc", GameStatus.DRAFT);
 
         GameUpdateRequest request = new GameUpdateRequest();
         request.setStatus(GameStatus.PUBLISHED);
@@ -199,10 +191,7 @@ class GameServiceTest {
         Long gameId = 1L;
         Long hostId = 200L;
 
-        Game game = new Game();
-        game.setId(gameId);
-        game.setCreatedBy(hostId);
-        game.setStatus(GameStatus.PUBLISHED);
+        Game game = GameMockData.createGame(gameId, hostId, "Original title", "Original desc", GameStatus.PUBLISHED);
 
         GameUpdateRequest request = new GameUpdateRequest();
         request.setStatus(GameStatus.DRAFT);
@@ -224,7 +213,7 @@ class GameServiceTest {
         Long hostId = 200L;
 
         GameUpdateRequest request = new GameUpdateRequest();
-        request.setTitle("Anything");
+        request.setTitle("AnythingWrong");
 
         when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
                 .thenReturn(Optional.empty());
@@ -238,13 +227,10 @@ class GameServiceTest {
         Long gameId = 1L;
         Long hostId = 200L;
 
-        Game game = new Game();
-        game.setId(gameId);
-        game.setCreatedBy(hostId);
-        game.setStatus(GameStatus.DRAFT);
+        Game game = GameMockData.createGame(gameId, hostId, "Small title", "My description", GameStatus.PUBLISHED);
 
         GameUpdateRequest request = new GameUpdateRequest();
-        request.setTitle("ab"); // < 3
+        request.setTitle("ab");
 
         when(gameRepository.findByIdAndCreatedBy(gameId, hostId))
                 .thenReturn(Optional.of(game));
@@ -257,12 +243,7 @@ class GameServiceTest {
         Long gameId = 1L;
         Long hostId = 200L;
 
-        Game game = new Game();
-        game.setId(gameId);
-        game.setCreatedBy(hostId);
-        game.setTitle("Original title");
-        game.setDescription("Original desc");
-        game.setStatus(GameStatus.DRAFT);
+        Game game = GameMockData.createGame(gameId, hostId, "My fav title", "My white description", GameStatus.PUBLISHED);
 
         GameUpdateRequest request = new GameUpdateRequest();
 
@@ -271,18 +252,21 @@ class GameServiceTest {
         when(gameRepository.save(any(Game.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        GameResponse response = new GameResponse();
-        response.setId(gameId);
-        response.setTitle("Original title");
-        response.setDescription("Original desc");
-        response.setStatus(GameStatus.DRAFT);
-
-        when(gameMapper.toGameResponse(any(Game.class))).thenReturn(response);
+        when(gameMapper.toGameResponse(any(Game.class)))
+                .thenAnswer(invocation -> {
+                    Game g = invocation.getArgument(0);
+                    GameResponse resp = new GameResponse();
+                    resp.setId(g.getId());
+                    resp.setTitle(g.getTitle());
+                    resp.setDescription(g.getDescription());
+                    resp.setStatus(g.getStatus());
+                    return resp;
+                });
 
         GameResponse result = gameService.updateGameMetadata(gameId, hostId, request);
 
-        assertEquals("Original title", result.getTitle());
-        assertEquals("Original desc", result.getDescription());
-        assertEquals(GameStatus.DRAFT, result.getStatus());
+        assertEquals("My fav title", result.getTitle());
+        assertEquals("My white description", result.getDescription());
+        assertEquals(GameStatus.PUBLISHED, result.getStatus());
     }
 }

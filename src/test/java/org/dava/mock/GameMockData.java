@@ -66,4 +66,21 @@ public class GameMockData {
                 .updatedAt(String.valueOf(game.getUpdatedAt()))
                 .build();
     }
+
+    public static Game createGame(Long id,
+                                  Long createdBy,
+                                  String title,
+                                  String description,
+                                  GameStatus status) {
+        return Game.builder()
+                .id(id)
+                .createdBy(createdBy)
+                .title(title)
+                .description(description)
+                .status(status)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
 }
