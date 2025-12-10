@@ -9,10 +9,10 @@ import org.dava.enumeration.GameStatus;
 @Setter
 public class GameUpdateRequest {
 
-    @Size(min = 3, message = "Title must be at least 3 characters long")
-    private String title;
+  @Size(min = 3, message = "Title must be at least 3 characters long")
+  private String title;
 
-    private String description;
+  private String description;
 
-    private GameStatus status;
+  private GameStatus status;
 }
