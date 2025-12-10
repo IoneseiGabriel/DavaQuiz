@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Global exception handler for authentication and authorization-related exceptions.
+ */
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class AuthExceptionHandler {
