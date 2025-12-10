@@ -4,8 +4,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.dava.annotation.ValidFile;
 import org.dava.dto.FileValidationDto;
-import org.springframework.util.MimeType;
-import org.springframework.util.MimeTypeUtils;
+import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
@@ -18,7 +17,7 @@ import java.util.Set;
  * </p>
  */
 public class FileValidator implements ConstraintValidator<ValidFile, MultipartFile> {
-    private static final Set<MimeType> SUPPORTED_FILE_TYPES = Set.of(MimeTypeUtils.IMAGE_JPEG, MimeTypeUtils.IMAGE_GIF, MimeTypeUtils.IMAGE_PNG);
+    private static final Set<MediaType> SUPPORTED_FILE_TYPES = Set.of(MediaType.IMAGE_JPEG, MediaType.IMAGE_GIF, MediaType.IMAGE_PNG);
 
     /**
      * Initializes the validator by receiving the annotation instance applied
@@ -72,7 +71,7 @@ public class FileValidator implements ConstraintValidator<ValidFile, MultipartFi
             return new FileValidationDto("File type is not specified.", false);
         }
 
-        boolean isValidType = SUPPORTED_FILE_TYPES.contains(MimeTypeUtils.parseMimeType(fileType)) || fileType.equals("image/webp");
+        boolean isValidType = SUPPORTED_FILE_TYPES.contains(MediaType.parseMediaType(fileType)) || fileType.equals("image/webp");
         if (!isValidType) {
             return new FileValidationDto(String.format("Invalid file type: %s", fileType), false);
         }

@@ -18,3 +18,13 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL
 );
 
+ -- File
+CREATE TABLE files (
+                      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                      content BLOB NOT NULL,
+                      name VARCHAR(100) UNIQUE NOT NULL,
+                      url VARCHAR(150) UNIQUE NOT NULL,
+                      content_type VARCHAR(50) NOT NULL
+);
+
+CREATE INDEX idx_file_url ON files (url);

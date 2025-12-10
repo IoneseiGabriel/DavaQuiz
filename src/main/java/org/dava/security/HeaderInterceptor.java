@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 public class HeaderInterceptor {
     private final JwtTokenProvider jwtTokenProvider;
 
-    public boolean isAuthorizationTokenValid(String token) {
+    public void isAuthorizationTokenValid(String token) {
         token = token.replace("Bearer ", "");
-        return jwtTokenProvider.validateAndGetUserId(token) != null;
+        jwtTokenProvider.validateAndGetUserId(token);
     }
 }

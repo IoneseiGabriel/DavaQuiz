@@ -1,6 +1,7 @@
 package org.dava.exception.handler;
 
 import org.dava.exception.ExceptionMessage;
+import org.dava.exception.InvalidFileException;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -36,5 +39,15 @@ public class FileExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ExceptionMessage> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
         return new ResponseEntity<>(new ExceptionMessage(e.getMessage()), HttpStatus.CONTENT_TOO_LARGE);
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    public ResponseEntity<ExceptionMessage> handleFileNotFoundException(FileNotFoundException e) {
+        return new ResponseEntity<>(new ExceptionMessage(e.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler({IOException.class, InvalidFileException.class})
+    public ResponseEntity<ExceptionMessage> handleIOException(Exception e) {
+        return new ResponseEntity<>(new ExceptionMessage(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
