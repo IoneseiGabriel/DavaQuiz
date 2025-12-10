@@ -1,8 +1,8 @@
-package org.dava.annotation;
+package org.dava.validation.annotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-import org.dava.util.FileValidator;
+import org.dava.validation.FileValidator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

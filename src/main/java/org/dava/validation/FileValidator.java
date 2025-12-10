@@ -1,13 +1,14 @@
-package org.dava.util;
+package org.dava.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.dava.annotation.ValidFile;
-import org.dava.dto.FileValidationDto;
+import org.dava.validation.annotation.ValidFile;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
+
+import static org.dava.validation.FileValidationMessages.*;
 
 /**
  * Validates a {@link MultipartFile} based on the rules defined by the {@link ValidFile} annotation.
@@ -37,9 +38,8 @@ public class FileValidator implements ConstraintValidator<ValidFile, MultipartFi
     /**
      * Performs validation of the provided {@link MultipartFile} parameter.
      * <p>
-     * This method checks whether the file satisfies the validation criteria
-     * defined in {@link FileValidator#checkFileType(MultipartFile)}
-     * and {@link FileValidator#checkFileContent(MultipartFile)}.
+     * This method checks whether the file satisfies the validation criteria, such as checking
+     * whether the file is not null, not empty and the content type is supported.
      * If the file does not meet the requirements, a custom constraint violation message is set to the
      * {@link ConstraintValidatorContext}, using {@link FileValidator#setContextWithException(ConstraintValidatorContext, String)},
      * and the method returns {@code false}.
@@ -50,39 +50,44 @@ public class FileValidator implements ConstraintValidator<ValidFile, MultipartFi
      */
     @Override
     public boolean isValid(MultipartFile file, ConstraintValidatorContext context) {
-        FileValidationDto isFileValid = checkFileType(file);
-        if (!isFileValid.isValid()) {
-            setContextWithException(context, isFileValid.getMessage());
+        if (isFileNull(file, context)) return false;
+        if (!isFileTypeValid(file, context)) return false;
+        return !isFileEmpty(file, context);
+    }
+
+    private static boolean isFileTypeValid(MultipartFile file, ConstraintValidatorContext context) {
+        String fileType = file.getContentType();
+        if (fileType == null) {
+            setContextWithException(context, FILE_TYPE_NOT_SPECIFIED_MESSAGE.getMessage());
             return false;
         }
 
-        isFileValid = checkFileContent(file);
-        if (!isFileValid.isValid()) {
-            setContextWithException(context, isFileValid.getMessage());
+        boolean isValidType = SUPPORTED_FILE_TYPES.contains(MediaType.parseMediaType(fileType)) || fileType.equals("image/webp");
+        if (!isValidType) {
+            setContextWithException(context, INVALID_FILE_TYPE_MESSAGE.getMessage() + ": "+ fileType);
             return false;
         }
 
         return true;
     }
 
-    private static FileValidationDto checkFileType(MultipartFile file) {
-        String fileType = file.getContentType();
-        if (fileType == null) {
-            return new FileValidationDto("File type is not specified.", false);
+    private static boolean isFileEmpty(MultipartFile file, ConstraintValidatorContext context) {
+        boolean isFileEmpty = file.isEmpty();
+
+        if (isFileEmpty) {
+            setContextWithException(context, EMPTY_FILE_MESSAGE.getMessage());
         }
 
-        boolean isValidType = SUPPORTED_FILE_TYPES.contains(MediaType.parseMediaType(fileType)) || fileType.equals("image/webp");
-        if (!isValidType) {
-            return new FileValidationDto(String.format("Invalid file type: %s", fileType), false);
-        }
-
-        return new FileValidationDto(null, true);
+        return isFileEmpty;
     }
 
-    private static FileValidationDto checkFileContent(MultipartFile file) {
-        boolean isFileEmpty = file.isEmpty();
-        String message = isFileEmpty ? "File is empty." : null;
-        return new FileValidationDto(message, !isFileEmpty);
+    private static boolean isFileNull(MultipartFile file, ConstraintValidatorContext context) {
+        if (file == null) {
+            setContextWithException(context, INVALID_FILE_MESSAGE.getMessage());
+            return true;
+        }
+
+        return false;
     }
 
     private static void setContextWithException(ConstraintValidatorContext context, String message) {

@@ -78,7 +78,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public FileDto getByName(String name) throws FileNotFoundException {
         File file = fileRepository.findByName(name)
-                .orElseThrow(() -> new FileNotFoundException(String.format("File with name %s not found.", name)));
+                .orElseThrow(() -> new FileNotFoundException("File with name '" + name + "' not found."));
 
         return new FileDto(file.getContentType(), file.getContent());
     }
