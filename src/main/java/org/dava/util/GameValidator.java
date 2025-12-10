@@ -8,17 +8,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class GameValidator {
 
-    public void handleStatusTransition(Game game, GameStatus requestedStatus){
-        GameStatus currentStatus = game.getStatus();
+  public void handleStatusTransition(Game game, GameStatus requestedStatus) {
+    GameStatus currentStatus = game.getStatus();
 
-        if(currentStatus == requestedStatus){
-            return;
-        }
-
-        if (currentStatus == GameStatus.DRAFT && requestedStatus == GameStatus.PUBLISHED){
-            return;
-        }
-
-        throw new InvalidGameException("Invalid status transition from "+ currentStatus + " to "+ requestedStatus);
+    if (currentStatus == requestedStatus) {
+      return;
     }
+
+    if (currentStatus == GameStatus.DRAFT && requestedStatus == GameStatus.PUBLISHED) {
+      return;
+    }
+
+    throw new InvalidGameException(
+        "Invalid status transition from " + currentStatus + " to " + requestedStatus);
+  }
 }

@@ -3,9 +3,7 @@ package org.dava.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
-/**
- * JPA entity representing an application user persisted in the database.
- */
+/** JPA entity representing an application user persisted in the database. */
 @Entity
 @Table(name = "users")
 @Data
@@ -14,18 +12,14 @@ import lombok.*;
 @Builder
 public class UserEntity {
 
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Column(nullable = false, unique = true)
+  private String username;
 
-
-    @Column(nullable = false, unique = true)
-    private String username;
-
-    /**
-     * Hashed password.
-     */
-    @Column(name = "password", nullable = false)
-    private String password;
+  /** Hashed password. */
+  @Column(name = "password", nullable = false)
+  private String password;
 }
