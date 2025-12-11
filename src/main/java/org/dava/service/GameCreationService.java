@@ -19,15 +19,15 @@ public class GameCreationService {
 
     public Game createGame(GameCreationRequest request, Long userId) {
 
-        // Check if request is valid
+
         processGameRequest(request);
 
         Game newGame = new Game();
 
-        // Set the fields for the new object with values from the request
+
         setGameFields(newGame, request, userId);
 
-        // Map questions to QuestionEntity
+
         for (QuestionCreationRequest qReq : request.getQuestions()) {
             processQuestionFromRequest(qReq);
 

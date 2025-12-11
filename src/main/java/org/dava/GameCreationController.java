@@ -17,7 +17,7 @@ public class GameCreationController {
         this.gameCreationService = gameCreationService;
     }
 
-    // Simple implementation for checking database updates
+
     @GetMapping
     public Iterable<Game> getAllGames() {
         return gameCreationService.getAllGames();
@@ -25,7 +25,7 @@ public class GameCreationController {
 
     @PostMapping
     public ResponseEntity<Game> createGame(@RequestBody GameCreationRequest request) {
-        // User id should be that of the host - mocking it for now
+
         Long userId = 200L;
 
         Game game = gameCreationService.createGame(request, userId);

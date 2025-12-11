@@ -1,11 +1,11 @@
 package org.dava.service;
 
 import org.dava.dao.GameRepository;
-import org.dava.dao.QuestionRepository;
 import org.dava.domain.Game;
 import org.dava.domain.GameStatus;
 import org.dava.domain.Question;
 import org.dava.domain.QuestionCreationRequest;
+import org.dava.validator.GameValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +27,7 @@ public class QuestionCreationServiceTest {
     private GameRepository gameRepository;
 
     @Mock
-    private QuestionRepository questionRepository; // nu îl folosim direct, dar îl cere service-ul
+    private GameValidator gameValidator;
 
     @InjectMocks
     private QuestionCreationService questionCreationService;
@@ -56,34 +56,43 @@ public class QuestionCreationServiceTest {
     }
 
     @Test
-    void createQuestionForGame_shouldCreateQuestion_whenGameIsDraftAndUserIsOwner() {
-        // arrange
+    void createQuestionForGame_shouldCreateQuestion_whenAllValidationsPass() {
+
         when(gameRepository.findById(1L)).thenReturn(Optional.of(draftGame));
 
         QuestionCreationRequest request = buildValidRequest();
 
-        // act
+
         Question result = questionCreationService.createQuestionForGame(1L, request, 200L);
 
-        // assert
+
         assertNotNull(result);
         assertEquals("What is 2+2?", result.getText());
         assertEquals(4, result.getOptions().size());
         assertEquals(1, result.getCorrectOptionIndex());
-        assertEquals(draftGame, result.getGame()); // presupune că addQuestion setează game
-
-        // Game ar trebui să aibă întrebarea în listă
+        assertEquals(draftGame, result.getGame());
         assertTrue(draftGame.getQuestions().contains(result));
 
-        // save(...) trebuie apelat o dată
+
         verify(gameRepository, times(1)).save(draftGame);
+
+
+        verify(gameValidator).validateGameExists(draftGame, 1L);
+        verify(gameValidator).validateGameIsDraft(draftGame);
+        verify(gameValidator).validateUserIsOwner(draftGame, 200L);
     }
 
     @Test
-    void createQuestionForGame_shouldThrowIllegalArgument_whenGameNotFound() {
-        when(gameRepository.findById(99L)).thenReturn(Optional.empty());
+    void createQuestionForGame_shouldPropagateException_whenGameDoesNotExist() {
 
+        when(gameRepository.findById(99L)).thenReturn(Optional.empty());
         QuestionCreationRequest request = buildValidRequest();
+
+
+        doThrow(new IllegalArgumentException("Game not found with id: 99"))
+                .when(gameValidator)
+                .validateGameExists(null, 99L);
+
 
         assertThrows(IllegalArgumentException.class,
                 () -> questionCreationService.createQuestionForGame(99L, request, 200L));
@@ -92,11 +101,13 @@ public class QuestionCreationServiceTest {
     }
 
     @Test
-    void createQuestionForGame_shouldThrowIllegalState_whenGameNotDraft() {
-        draftGame.setStatus(GameStatus.PUBLISHED);
+    void createQuestionForGame_shouldPropagateException_whenGameNotDraft() {
         when(gameRepository.findById(1L)).thenReturn(Optional.of(draftGame));
-
         QuestionCreationRequest request = buildValidRequest();
+
+        doThrow(new IllegalStateException("Cannot add questions to a non-draft game."))
+                .when(gameValidator)
+                .validateGameIsDraft(draftGame);
 
         assertThrows(IllegalStateException.class,
                 () -> questionCreationService.createQuestionForGame(1L, request, 200L));
@@ -105,11 +116,13 @@ public class QuestionCreationServiceTest {
     }
 
     @Test
-    void createQuestionForGame_shouldThrowSecurityException_whenUserNotOwner() {
-        draftGame.setCreatedBy(999L); // alt user
+    void createQuestionForGame_shouldPropagateException_whenUserNotOwner() {
         when(gameRepository.findById(1L)).thenReturn(Optional.of(draftGame));
-
         QuestionCreationRequest request = buildValidRequest();
+
+        doThrow(new SecurityException("You are not allowed to modify this game."))
+                .when(gameValidator)
+                .validateUserIsOwner(draftGame, 200L);
 
         assertThrows(SecurityException.class,
                 () -> questionCreationService.createQuestionForGame(1L, request, 200L));
