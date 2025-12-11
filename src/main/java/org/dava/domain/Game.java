@@ -2,56 +2,67 @@ package org.dava.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.*;
+import org.dava.enumeration.GameStatus;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.validator.constraints.Length;
 
-// Game.java
-@Entity
-@Table(name = "game")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Table(
+    name = "game",
+    indexes = {@Index(name = "idx_game_created_by", columnList = "created_by")})
+@Entity
 public class Game {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(name = "title", nullable = false)
-    private String title;
+  @NotBlank
+  @Length(max = 100)
+  private String title;
 
-    @Column(name = "description")
-    private String description;
+  @Length(max = 500)
+  private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private GameStatus status = GameStatus.DRAFT;
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  private GameStatus status = GameStatus.DRAFT;
 
-    @Column(name = "created_by")
-    private Long createdBy;
+  @NotNull
+  @Column(name = "created_by")
+  private Long createdBy;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+  @Column(name = "created_at")
+  @CreationTimestamp(source = SourceType.DB)
+  private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+  @Column(name = "updated_at")
+  @UpdateTimestamp(source = SourceType.DB)
+  private LocalDateTime updatedAt;
 
-    @Transient
-    private Integer questionCount;
+  @Transient private Integer questionCount;
 
-    @JsonProperty("questionCount")
-    public Integer getQuestionCount() {
-        return questions != null ? questions.size() : 0;
-    }
+  @JsonProperty("questionCount")
+  public Integer getQuestionCount() {
+    return questions != null ? questions.size() : 0;
+  }
 
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Question> questions = new ArrayList<>();
+  @Builder.Default
+  @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Question> questions = new ArrayList<>();
 
-    public void addQuestion(Question q) {
-        questions.add(q);
-        q.setGame(this);
-    }
+  public void addQuestion(Question q) {
+    questions.add(q);
+    q.setGame(this);
+  }
 }
