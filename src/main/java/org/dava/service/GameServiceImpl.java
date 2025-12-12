@@ -10,14 +10,18 @@ import lombok.RequiredArgsConstructor;
 import org.dava.dao.GameRepository;
 import org.dava.dao.GameSpecification;
 import org.dava.domain.Game;
+import org.dava.domain.Question;
+import org.dava.dto.GameRequest;
 import org.dava.dto.GameUpdateRequest;
+import org.dava.dto.QuestionRequest;
 import org.dava.exception.InvalidGameException;
 import org.dava.mapper.GameMapper;
+import org.dava.mapper.QuestionMapper;
 import org.dava.response.GameResponse;
 import org.dava.response.PageResponse;
+import org.dava.response.QuestionResponse;
 import org.dava.util.FilteringHelper;
 import org.dava.util.GameValidator;
-import org.dava.util.ValidationUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,8 +38,7 @@ public class GameServiceImpl implements GameService {
   private final GameRepository gameRepository;
 
   private final GameMapper gameMapper;
-
-  private final GameValidator gameValidator;
+  private final QuestionMapper questionMapper;
 
   /**
    * Retrieves a paginated list of games, optionally filtered by several fields.
@@ -50,8 +53,8 @@ public class GameServiceImpl implements GameService {
    * @return a {@link PageResponse} containing the requested page of {@link GameResponse} objects
    */
   public PageResponse<GameResponse> getAll(int page, int size, Map<String, Object> filters) {
-    ValidationUtil.checkIntegerInput(page, "page");
-    ValidationUtil.checkIntegerInput(size, "size");
+    GameValidator.checkIntegerInput(page, "page");
+    GameValidator.checkIntegerInput(size, "size");
 
     Map<String, Object> parsedFilters =
         FilteringHelper.parseFilters(new ConcurrentHashMap<>(filters), getFilterFields());
@@ -74,8 +77,44 @@ public class GameServiceImpl implements GameService {
     return gameMapper.toResponsePage(games, filters.keySet());
   }
 
-  private static Set<String> getFilterFields() {
-    return Set.of("status", "createdAt", "updatedAt", "createdBy", "title");
+  /**
+   * Creates a new {@link Game} entity based on the provided request payload and user identifier,
+   * persists it, and returns a mapped {@link GameResponse}.
+   *
+   * <p>The method performs several steps:
+   *
+   * <ul>
+   *   <li>Validates the incoming {@link GameRequest} and its nested {@link QuestionResponse}
+   *       objects.
+   *   <li>Constructs a new {@link Game} entity and populates its fields using {@link
+   *       DomainFieldsHelper}.
+   *   <li>Creates and populates {@link Question} entities for each question in the request.
+   *   <li>Persists the assembled game using {@link GameRepository}.
+   *   <li>Converts the saved entity into a {@link GameResponse} via {@link GameMapper}.
+   * </ul>
+   *
+   * @param request the incoming payload containing game details and associated questions
+   * @param userId the identifier of the user creating the game
+   * @return a {@link GameResponse} representation of the newly created and persisted game
+   */
+  @Override
+  public GameResponse createGame(GameRequest request, Long userId) {
+
+    GameValidator.processGameRequest(request);
+
+    Game newGame = gameMapper.toEntity(request, userId);
+
+    for (QuestionRequest qReq : request.getQuestions()) {
+      GameValidator.processQuestionFromRequest(qReq);
+
+      Question q = questionMapper.toEntity(qReq);
+
+      newGame.addQuestion(q);
+    }
+
+    Game saved = gameRepository.save(newGame);
+
+    return gameMapper.toGameResponse(saved);
   }
 
   /**
@@ -107,7 +146,7 @@ public class GameServiceImpl implements GameService {
     }
 
     if (request.getStatus() != null) {
-      gameValidator.handleStatusTransition(game, request.getStatus());
+      GameValidator.handleStatusTransition(game, request.getStatus());
       game.setStatus(request.getStatus());
     }
 
@@ -115,5 +154,9 @@ public class GameServiceImpl implements GameService {
 
     Game saved = gameRepository.save(game);
     return gameMapper.toGameResponse(saved);
+  }
+
+  private static Set<String> getFilterFields() {
+    return Set.of("status", "createdAt", "updatedAt", "createdBy", "title");
   }
 }

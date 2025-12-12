@@ -30,9 +30,10 @@
         <java.version>17</java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <asciidoctor-maven.version>2.2.1</asciidoctor-maven.version>
+        <spring-restdocs.version>4.0.0</spring-restdocs.version>
         <jacoco-maven.version>0.8.14</jacoco-maven.version>
         <java-jwt.version>4.4.0</java-jwt.version>
-        <maven.spottles.version>2.43.0</maven.spottles.version>
+        <maven.spotless.version>2.43.0</maven.spotless.version>
     </properties>
     <dependencies>
         <dependency>
@@ -174,7 +175,7 @@
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
-                <version>${maven.spottles.version}</version>
+                <version>${maven.spotless.version}</version>
                 <executions>
                     <execution>
                         <goals>

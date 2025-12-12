@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.dava.mock.GameMockData.getGameResponse;
 import static org.dava.mock.GameMockData.getValidGameList;
 import static org.dava.mock.PageMockData.getPageResponse;
+import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import org.dava.domain.Game;
+import org.dava.domain.Question;
 import org.dava.mock.GameMockData;
 import org.dava.response.GameResponse;
 import org.dava.response.PageResponse;
@@ -117,5 +120,87 @@ class GameMapperTest {
         .usingRecursiveComparison()
         .ignoringFields("createdAt", "updatedAt")
         .isEqualTo(expected.getContent());
+  }
+
+  @Test
+  void toGameResponseMapsBasicFields() {
+    Game game = GameMockData.getGameWithValidNumberOfQuestions();
+
+    GameResponse response = gameMapper.toGameResponse(game);
+
+    assertNotNull(response, "Mapped response should not be null");
+    assertEquals(game.getId(), response.getId(), "Mapped game id should match");
+    assertEquals(game.getTitle(), response.getTitle(), "Mapped game title should match");
+    assertEquals(game.getDescription(), response.getDescription(), "");
+    assertEquals(game.getStatus(), response.getStatus(), "Mapped game status should match");
+    assertEquals(
+        game.getCreatedBy(), response.getCreatedBy(), "Mapped game created by should match");
+  }
+
+  @Test
+  void toGameWithNullEntity() {
+
+    GameResponse response = gameMapper.toGameResponse(null);
+
+    assertNull(response, "Mapped response should be null if game is invalid");
+  }
+
+  @Test
+  void toGameResponseComputesQuestionCountWhenQuestionsNotNull() {
+    Game game =
+        Game.builder()
+            .id(1L)
+            .title("Test Game")
+            .questions(List.of(new Question(), new Question(), new Question()))
+            .build();
+
+    GameResponse response = gameMapper.toGameResponse(game);
+
+    assertNotNull(response);
+    assertEquals(
+        3, response.getQuestionCount(), "questionCount should equal size of questions list");
+  }
+
+  @Test
+  void toGameResponseQuestionCountIsZeroWhenQuestionsNull() {
+    Game game = GameMockData.getGameWithNullQuestions();
+
+    GameResponse response = gameMapper.toGameResponse(game);
+
+    assertNotNull(response);
+    assertEquals(
+        0, response.getQuestionCount(), "questionCount should be 0 when questions list is null");
+  }
+
+  @Test
+  void toGameResponseFormatsCreatedAtAndUpdatedAtToString() {
+    LocalDateTime createdAt = LocalDateTime.of(2024, 3, 10, 15, 45, 30);
+    LocalDateTime updatedAt = LocalDateTime.of(2024, 3, 11, 16, 0, 0);
+
+    Game game =
+        Game.builder().id(1L).title("Test Game").createdAt(createdAt).updatedAt(updatedAt).build();
+
+    GameResponse response = gameMapper.toGameResponse(game);
+
+    assertNotNull(response);
+    assertEquals(
+        createdAt.toString(),
+        response.getCreatedAt(),
+        "createdAt should be mapped using LocalDateTime.toString()");
+    assertEquals(
+        updatedAt.toString(),
+        response.getUpdatedAt(),
+        "updatedAt should be mapped using LocalDateTime.toString()");
+  }
+
+  @Test
+  void toGameResponseSetsCreatedAtAndUpdatedAtNullWhenSourceNull() {
+    Game game = Game.builder().id(1L).title("Test Game").createdAt(null).updatedAt(null).build();
+
+    GameResponse response = gameMapper.toGameResponse(game);
+
+    assertNotNull(response);
+    assertNull(response.getCreatedAt(), "createdAt should be null when source createdAt is null");
+    assertNull(response.getUpdatedAt(), "updatedAt should be null when source updatedAt is null");
   }
 }

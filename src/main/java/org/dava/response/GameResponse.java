@@ -2,6 +2,7 @@ package org.dava.response;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,4 +33,6 @@ public class GameResponse {
   private String updatedAt;
 
   private Integer questionCount;
+
+  private List<QuestionResponse> questions;
 }

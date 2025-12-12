@@ -200,12 +200,13 @@ class GameServiceTest {
 
     when(gameRepository.findByIdAndCreatedBy(gameId, hostId)).thenReturn(Optional.of(game));
 
-    doThrow(new InvalidGameException("Invalid status transition"))
-        .when(gameValidator)
-        .handleStatusTransition(game, GameStatus.DRAFT);
+    InvalidGameException e =
+        assertThrows(
+            InvalidGameException.class,
+            () -> gameService.updateGameMetadata(gameId, hostId, request),
+            "Invalid status transition.");
 
-    assertThrows(
-        InvalidGameException.class, () -> gameService.updateGameMetadata(gameId, hostId, request));
+    assertEquals("Invalid status transition from PUBLISHED to DRAFT", e.getMessage());
   }
 
   @Test

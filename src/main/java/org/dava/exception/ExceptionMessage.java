@@ -1,12 +1,20 @@
 package org.dava.exception;
 
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 public class ExceptionMessage {
-  private Object message;
+
+  private String timestamp;
+  private String error;
+  private String message;
+
+  public static ExceptionMessage of(String error, String message) {
+    return new ExceptionMessage(Instant.now().toString(), error, message);
+  }
 }
