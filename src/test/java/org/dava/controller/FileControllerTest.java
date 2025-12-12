@@ -43,7 +43,7 @@ class FileControllerTest {
     saveFile();
 
     // Act & Assert
-    mockMvc.perform(multipart(url).file(VALID_FILE)).andExpect(status().isInternalServerError());
+    mockMvc.perform(multipart(url).file(VALID_FILE)).andExpect(status().isConflict());
   }
 
   @Test

@@ -11,6 +11,7 @@ import org.dava.mapper.FileMapper;
 import org.dava.response.FileResponse;
 import org.dava.response.FileUploadResponse;
 import org.dava.util.FileUrlGenerator;
+import org.dava.validator.FileValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileServiceImpl implements FileService {
   private final FileRepository fileRepository;
   private final FileMapper fileMapper;
+  private final FileValidator fileValidator;
 
   /**
    * Uploads a {@link MultipartFile} object.
@@ -39,6 +41,8 @@ public class FileServiceImpl implements FileService {
    *     MultipartFile#getBytes()}
    */
   public FileUploadResponse upload(MultipartFile fileToUpload) throws IOException {
+    fileValidator.checkIfFileExists(fileToUpload.getOriginalFilename());
+
     String url = FileUrlGenerator.generateUrl(fileToUpload.getOriginalFilename());
 
     File file =

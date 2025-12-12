@@ -9,7 +9,7 @@ import org.dava.dto.FileDto;
 import org.dava.response.FileResponse;
 import org.dava.response.FileUploadResponse;
 import org.dava.service.FileService;
-import org.dava.validation.annotation.ValidFile;
+import org.dava.validator.annotation.ValidFile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

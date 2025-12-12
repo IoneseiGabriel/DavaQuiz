@@ -1,12 +1,18 @@
-package org.dava.validation;
+package org.dava.validator;
 
-import static org.dava.validation.FileValidationMessages.*;
+import static org.dava.validator.FileValidationMessages.*;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import java.util.Optional;
 import java.util.Set;
-import org.dava.validation.annotation.ValidFile;
+import lombok.RequiredArgsConstructor;
+import org.dava.dao.FileRepository;
+import org.dava.domain.File;
+import org.dava.exception.ExistentFileException;
+import org.dava.validator.annotation.ValidFile;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -15,7 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
  * <p>This validator checks whether an uploaded file meets specific type and content criteria,
  * depending on the logic implemented in the {@code isValid} method.
  */
+@Component
+@RequiredArgsConstructor
 public class FileValidator implements ConstraintValidator<ValidFile, MultipartFile> {
+  private final FileRepository fileRepository;
+
   private static final Set<MediaType> SUPPORTED_FILE_TYPES =
       Set.of(MediaType.IMAGE_JPEG, MediaType.IMAGE_GIF, MediaType.IMAGE_PNG);
 
@@ -53,6 +63,14 @@ public class FileValidator implements ConstraintValidator<ValidFile, MultipartFi
     if (isFileNull(file, context)) return false;
     if (!isFileTypeValid(file, context)) return false;
     return !isFileEmpty(file, context);
+  }
+
+  public void checkIfFileExists(String fileName) {
+    Optional<File> file = fileRepository.findByName(fileName);
+    if (file.isPresent()) {
+      throw new ExistentFileException(
+          "A file with the same name was already uploaded: " + fileName);
+    }
   }
 
   private static boolean isFileTypeValid(MultipartFile file, ConstraintValidatorContext context) {

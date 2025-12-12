@@ -1,4 +1,4 @@
-package org.dava.validation;
+package org.dava.validator;
 
 public enum FileValidationMessages {
   FILE_TYPE_NOT_SPECIFIED_MESSAGE {

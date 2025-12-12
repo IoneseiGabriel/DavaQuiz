@@ -1,4 +1,4 @@
-package org.dava.validation.annotation;
+package org.dava.validator.annotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -6,7 +6,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import org.dava.validation.FileValidator;
+import org.dava.validator.FileValidator;
 import org.springframework.web.multipart.MultipartFile;
 
 /**

@@ -18,6 +18,7 @@ import org.dava.mapper.FileMapper;
 import org.dava.mock.FileMockData;
 import org.dava.response.FileResponse;
 import org.dava.response.FileUploadResponse;
+import org.dava.validator.FileValidator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,8 @@ class FileServiceImplTest {
   @Mock private FileRepository fileRepository;
 
   @Mock private FileMapper fileMapper;
+
+  @Mock private FileValidator fileValidator;
 
   @InjectMocks private FileServiceImpl fileService;
 

@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
 import org.dava.exception.ExceptionMessage;
+import org.dava.exception.ExistentFileException;
 import org.dava.exception.InvalidFileException;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.Ordered;
@@ -46,6 +47,12 @@ public class FileExceptionHandler {
   public ResponseEntity<ExceptionMessage> handleFileNotFoundException(FileNotFoundException e) {
     return new ResponseEntity<>(
         ExceptionMessage.of("File Not Found Exception", e.getMessage()), HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(ExistentFileException.class)
+  public ResponseEntity<ExceptionMessage> handleExistentFileException(ExistentFileException e) {
+    return new ResponseEntity<>(
+        ExceptionMessage.of("Existent File Exception", e.getMessage()), HttpStatus.CONFLICT);
   }
 
   @ExceptionHandler({IOException.class, InvalidFileException.class})
