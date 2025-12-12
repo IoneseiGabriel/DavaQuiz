@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FileDto {
-    private String type;
-    private byte[] content;
+  private String type;
+  private byte[] content;
 }

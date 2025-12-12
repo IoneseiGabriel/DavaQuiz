@@ -12,17 +12,17 @@ import org.hibernate.validator.constraints.Length;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FileResponse {
-    private Long id;
+  private Long id;
 
-    @NotBlank
-    @Length(max = 100)
-    private String name;
+  @NotBlank
+  @Length(max = 100)
+  private String name;
 
-    @NotBlank
-    @Length(max = 150)
-    private String url;
+  @NotBlank
+  @Length(max = 150)
+  private String url;
 
-    @NotBlank
-    @Length(max = 50)
-    private String contentType;
+  @NotBlank
+  @Length(max = 50)
+  private String contentType;
 }
