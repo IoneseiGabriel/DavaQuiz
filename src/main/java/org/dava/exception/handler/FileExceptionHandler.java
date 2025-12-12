@@ -33,21 +33,21 @@ public class FileExceptionHandler {
                 .findFirst()
                 .orElse("Validation failed.");
 
-        return new ResponseEntity<>(new ExceptionMessage(message), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(ExceptionMessage.of("Validation Exception", message), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ExceptionMessage> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
-        return new ResponseEntity<>(new ExceptionMessage(e.getMessage()), HttpStatus.CONTENT_TOO_LARGE);
+        return new ResponseEntity<>(ExceptionMessage.of("Size Exception", e.getMessage()), HttpStatus.CONTENT_TOO_LARGE);
     }
 
     @ExceptionHandler(FileNotFoundException.class)
     public ResponseEntity<ExceptionMessage> handleFileNotFoundException(FileNotFoundException e) {
-        return new ResponseEntity<>(new ExceptionMessage(e.getMessage()), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(ExceptionMessage.of("File Not Found Exception",e.getMessage()), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler({IOException.class, InvalidFileException.class})
     public ResponseEntity<ExceptionMessage> handleIOException(Exception e) {
-        return new ResponseEntity<>(new ExceptionMessage(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(ExceptionMessage.of("File Operation Failed Exception", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
