@@ -34,7 +34,6 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<@NonNull ExceptionMessage> handleGeneric(Exception e) {
-
     return ResponseEntity.internalServerError()
         .body(ExceptionMessage.of("An error occurred.", e.getMessage()));
   }
